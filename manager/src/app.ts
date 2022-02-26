@@ -1,86 +1,123 @@
 import express, { Request, Response } from 'express'
-import axios from 'axios'
 
 import config from './config'
-import { crawlPage, enqueueJob } from './jobQueue'
-
+import { enqueueJob, isInQueue } from './jobQueue'
+import * as logger from './logger'
+import { AssetType, Crawl, CrawlResult, CrawlStartRequest } from '../../types'
 // Set Express and bodyParser
 const app = express()
 app.use(express.json())
 
-// Health check
+export const crawls: Record<string, Crawl> = {}
+const targetAssetsDefault: AssetType[] = ['links', 'images']
+
+const isValidProtocol = (url: URL) =>
+    url.protocol === 'http:' || url.protocol === 'https:'
+const shouldFollowLink = ({
+    pageUrl,
+    linkUrl,
+}: {
+    pageUrl: string
+    linkUrl: URL
+}) => {
+    const url = new URL(pageUrl)
+    return isValidProtocol(linkUrl) && linkUrl.host === url.host
+}
+const formatUrl = (link: string, domain: string): string | null => {
+    try {
+        const url = new URL(link, domain)
+        return url.href
+    } catch {
+        return null
+    }
+}
 
 app.get('/', (req: Request, res: Response) => {
     res.send(`Hello from ${config.SERVICE_NAME}! (v${config.SERVICE_VERSION})`)
 })
 
-app.get('/crawl', async (req: Request, res: Response) => {
-    const domain = req.query.domain // query
-    // call cloudfunction
-    if (typeof domain === 'string' && domain.length > 0) {
-        enqueueJob({ pageUrl: domain, depth: 0 })
-    }
+app.get('/start-crawl', async (req: CrawlStartRequest, res: Response) => {
+    const startPage = req.query.url // query
+    try {
+        const { origin: domain, href } = new URL(startPage)
 
+        const existingCrawl = crawls[domain]
+        if (existingCrawl) {
+            logger.log(`already crawling ${domain}`)
+            res.send(`already crawling ${domain}`)
+            return
+        } else {
+            //fetch robots, behave
+            crawls[domain] = {
+                visited: new Map(),
+                crawlDelay: 100,
+                startedAtTime: new Date(),
+            }
+        }
+        if (href.length > 0) {
+            enqueueJob({
+                domain,
+                pageUrl: href,
+                depth: 0,
+                targetAssets: targetAssetsDefault,
+            })
+        }
+    } catch (e) {
+        console.log(e)
+        res.send('400')
+        return
+    }
     res.send('ok')
 })
 
-type PageUrl = string
-
-type CrawlResult = {
-    url: PageUrl
-    links: PageUrl[]
-    depth: number
-    info: unknown
-}
-
-const tryParseLink = (link: string, pageUrl: PageUrl): URL | null => {
-    try {
-        const { origin } = new URL(pageUrl)
-        const url = new URL(link, origin)
-        return url
-    } catch (e) {
-        console.log(e)
-        return null
-    }
-}
-const isValidProtocol = (url: URL) =>
-    url.protocol === 'http:' || url.protocol === 'https:'
-const shouldFollowLink = ({
-    page,
-    link,
-    depth,
-}: {
-    page: PageUrl
-    link: PageUrl
-    depth: number
-}) => {
-    if (depth > 1) {
-        return false
-    } else {
-        const linkUrl = tryParseLink(link, page)
-        const pageUrl = new URL(page)
-        return (
-            linkUrl && isValidProtocol(linkUrl) && linkUrl.host === pageUrl.host
-        )
-    }
-}
-
 app.post(
-    '/crawlResult',
+    '/crawl-result',
     (req: Request<unknown, unknown, CrawlResult>, res: Response) => {
         const crawlResult = req.body
         // call cloudfunction
-        console.log('crawled', crawlResult.url)
+
         try {
-            const { depth, links, url } = crawlResult
-            if (depth < 1) {
-                links.map(
-                    (link) =>
-                        shouldFollowLink({ page: url, link, depth }) &&
-                        enqueueJob({ pageUrl: link, depth: depth + 1 })
-                )
+            const { depth, assets, url: crawledUrl, domain } = crawlResult
+            const crawl = crawls[domain]
+            if (!crawl) {
+                throw Error(`No crawl found for domain ${domain}`)
             }
-        } catch {}
+
+            crawl.visited.set(crawledUrl, assets || {})
+
+            if (assets && assets.links && depth < 20) {
+                const urls = assets.links
+                    .map((link) => formatUrl(link, domain))
+                    .filter((l): l is string => typeof l === 'string')
+                const urlsUnique = [...new Set(urls)]
+                urlsUnique.map((url) => {
+                    const hasVisited = crawl.visited.has(url)
+                    const shouldFollow = shouldFollowLink({
+                        pageUrl: crawledUrl,
+                        linkUrl: new URL(url),
+                    })
+                    if (url && !hasVisited && shouldFollow && !isInQueue(url)) {
+                        console.log(`enqueing job ${url}`)
+                        const visited = [...crawl.visited.keys()]
+                        console.log(visited)
+                        enqueueJob({
+                            domain,
+                            pageUrl: url,
+                            depth: depth + 1,
+                            targetAssets: targetAssetsDefault,
+                        })
+                    }
+                })
+            } else {
+                console.log('depth limit reached, not adding more jobs')
+            }
+        } catch (e) {
+            if (e instanceof Error) {
+                logger.logError(e.message)
+            } else {
+                logger.logError('Unknown error')
+            }
+        }
 
         res.send(200)
     }

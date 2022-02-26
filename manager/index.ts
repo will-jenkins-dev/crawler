@@ -15,7 +15,7 @@ const { PORT, HOST, SERVICE_NAME, SERVICE_VERSION } = config
 //     migrateUp(getDb())
 // })
 
-app.listen(PORT, HOST)
+app.listen(PORT as number, HOST as string)
 console.log(
     `${SERVICE_NAME} (${SERVICE_VERSION}) is running on http://${HOST}:${PORT}`
 )
