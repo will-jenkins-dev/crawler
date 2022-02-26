@@ -1,0 +1,5 @@
+const path = require('path')
+module.exports = {
+  'config': path.resolve('sql-cli-config.json'),
+  'migrations-path': path.resolve('src/db/migration', 'migrations')
+}
