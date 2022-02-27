@@ -7,3 +7,5 @@ export const targetAssetsDefault: AssetType[] = [
     'video',
     'audio',
 ]
+
+export const CONCURRENT_JOBS_COUNT_MAX = 4

@@ -2,6 +2,7 @@ import axios from 'axios'
 
 import { Crawl, CrawlJob } from '../../../types'
 import { buildCrawlerUrl } from '../utils/url'
+import { currentJobCount, hasCapacity, incrementJobCount } from './jobCounter'
 
 export const crawls: Record<string, Crawl> = {}
 
@@ -17,21 +18,22 @@ export const crawlPage = async (job: CrawlJob): Promise<void> => {
 }
 export const jobQueue: CrawlJob[] = []
 ;(async function runQueue() {
-    if (jobQueue.length > 0) {
-        console.log('yes some jobs')
+    if (hasCapacity() && jobQueue.length > 0) {
         const nextJob = jobQueue[0]
         const { domain } = nextJob
         const crawl = crawls[domain]
         const { lastCrawlTime, crawlDelayMsec } = crawl
-        console.log(`tims is ${lastCrawlTime + crawlDelayMsec}`)
         if (lastCrawlTime + crawlDelayMsec <= Date.now()) {
+            incrementJobCount()
             const job = jobQueue.shift()
-            console.log('enqueueing job')
             job && (await crawlPage(job))
+            crawl.lastCrawlTime = Date.now()
         }
+        // const elapsedSec = (Date.now() - crawl.crawlStartTime) / 1000
+        // console.log(`rate is ${crawl.visited.size / elapsedSec} pages/sec`)
     }
 
-    setTimeout(runQueue, 100)
+    setTimeout(runQueue, 50)
 })()
 
 export const enqueueJob = (crawlJob: CrawlJob): void => {

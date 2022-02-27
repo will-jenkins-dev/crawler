@@ -10,6 +10,7 @@ import {
 } from '../../types'
 import { cleanLinks, shouldFollowLink } from './utils/links'
 import { targetAssetsDefault } from './constants'
+import { decrementJobCount } from './queue/jobCounter'
 
 const app = express()
 app.use(express.json())
@@ -35,8 +36,9 @@ app.get('/start-crawl', async (req: CrawlStartRequest, res: Response) => {
         // start new crawl
         crawls[domain] = {
             visited: new Map(),
-            crawlDelayMsec: 250,
+            crawlDelayMsec: 100,
             lastCrawlTime: 0,
+            crawlStartTime: Date.now(),
         }
         enqueueJob({
             domain,
@@ -57,7 +59,7 @@ app.get('/crawl-status', async (req: CrawlStatustRequest, res: Response) => {
     const crawlUrl = req.query.url
     let domain
     try {
-        const { origin, href } = new URL(crawlUrl)
+        const { origin } = new URL(crawlUrl)
         domain = origin
         const existingCrawl = crawls[domain]
         if (!existingCrawl) {
@@ -77,7 +79,6 @@ app.get('/crawl-status', async (req: CrawlStatustRequest, res: Response) => {
         logger.logError(e)
         return res.send(`Erk, unable to start a crawl of ${domain}`)
     }
-    // res.send(`ok, crawling ${domain}`)
 })
 
 app.post(
@@ -92,7 +93,7 @@ app.post(
             }
 
             currentCrawl.visited.set(crawledUrl, assets)
-
+            decrementJobCount()
             if (assets.links && depth < 20) {
                 const urls = cleanLinks(assets.links, domain)
                 urls.forEach((url) => {

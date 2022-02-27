@@ -13,7 +13,7 @@ app.get('/', (req: Request, res: Response) => {
 
 app.get('/crawl', async (req: CrawlJobRequest, res: Response) => {
     const { job: jobString, callbackUrl } = req.query
-    console.log(`received ${jobString}`)
+
     if (!jobString || !callbackUrl) {
         return res.sendStatus(400)
     }
@@ -22,6 +22,7 @@ app.get('/crawl', async (req: CrawlJobRequest, res: Response) => {
     const { pageUrl: url, domain, depth, targetAssets } = job
 
     if (isValidUrl(url)) {
+        res.sendStatus(200)
         let crawlResult: CrawlResult | undefined
         try {
             const { status, data } = await axios.get(url)
@@ -37,9 +38,10 @@ app.get('/crawl', async (req: CrawlJobRequest, res: Response) => {
             console.log(e)
             crawlResult = { domain, url, depth, info: { status: 500 } }
         }
-
-        await axios.post(callbackUrl, crawlResult)
+        try {
+            await axios.post(callbackUrl, crawlResult)
+        } catch (e) {
+            console.log(e)
+        }
     }
-
-    res.send(`OK`)
 })

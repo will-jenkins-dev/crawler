@@ -37,4 +37,5 @@ export type Crawl = {
     visited: Map<string, PageAssets>
     crawlDelayMsec: number
     lastCrawlTime: number
+    crawlStartTime: number
 }
