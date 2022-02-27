@@ -13,6 +13,7 @@ app.get('/', (req: Request, res: Response) => {
 
 app.get('/crawl', async (req: CrawlJobRequest, res: Response) => {
     const { job: jobString, callbackUrl } = req.query
+    console.log(`received ${jobString}`)
     if (!jobString || !callbackUrl) {
         return res.sendStatus(400)
     }

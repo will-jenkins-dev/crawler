@@ -12,6 +12,14 @@ const findAssets = (assetType: AssetType, doc: Document): string[] => {
                 .filter(linkIsValid)
         case 'images':
             return [...doc.querySelectorAll('img')].map((im) => im.src)
+        case 'form':
+            return [...doc.querySelectorAll('form')].map(
+                (f) => f.id || 'unknown id'
+            )
+        case 'video':
+            return [...doc.querySelectorAll('video')].map((v) => v.src)
+        case 'audio':
+            return [...doc.querySelectorAll('audio')].map((a) => a.src)
         default:
             throw Error('unkown tag type')
     }
@@ -19,7 +27,7 @@ const findAssets = (assetType: AssetType, doc: Document): string[] => {
 
 export const collectAssets = (
     data: string,
-    targetAssets: ('links' | 'images')[]
+    targetAssets: AssetType[]
 ): PageAssets => {
     const jsdom = new JSDOM(data)
     const doc = jsdom.window.document

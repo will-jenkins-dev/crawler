@@ -1,6 +1,7 @@
-const assetType = ['links', 'images'] as const
+const assetType = ['links', 'images', 'form', 'video', 'audio'] as const
 export type AssetType = typeof assetType[number]
 export type PageAssets = { [K in AssetType]?: string[] }
+
 export type CrawlResult = {
     domain: string
     url: string
@@ -14,6 +15,8 @@ export type CrawlStartRequest = Express.Request & {
         url: string
     }
 }
+
+export type CrawlStatustRequest = CrawlStartRequest
 
 export type CrawlJob = {
     domain: string
@@ -32,6 +35,6 @@ export type CrawlJobResponse = Express.Response & {}
 
 export type Crawl = {
     visited: Map<string, PageAssets>
-    crawlDelay: number
-    startedAtTime: Date
+    crawlDelayMsec: number
+    lastCrawlTime: number
 }
