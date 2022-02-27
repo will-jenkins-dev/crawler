@@ -28,6 +28,7 @@ export type CrawlJobRequest = Express.Request & {
         callbackUrl: string
     }
 }
+export type CrawlJobResponse = Express.Response & {}
 
 export type Crawl = {
     visited: Map<string, PageAssets>

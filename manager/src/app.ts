@@ -4,7 +4,7 @@ import config from './config'
 import { enqueueJob, isInQueue } from './jobQueue'
 import * as logger from './logger'
 import { AssetType, Crawl, CrawlResult, CrawlStartRequest } from '../../types'
-// Set Express and bodyParser
+
 const app = express()
 app.use(express.json())
 
@@ -37,17 +37,20 @@ app.get('/', (req: Request, res: Response) => {
 })
 
 app.get('/start-crawl', async (req: CrawlStartRequest, res: Response) => {
-    const startPage = req.query.url // query
+    const startPage = req.query.url
+    let domain
     try {
-        const { origin: domain, href } = new URL(startPage)
-
+        const { origin, href } = new URL(startPage)
+        domain = origin
         const existingCrawl = crawls[domain]
         if (existingCrawl) {
             logger.log(`already crawling ${domain}`)
-            res.send(`already crawling ${domain}`)
-            return
+            return res.send(`already crawling ${domain}`)
         } else {
-            //fetch robots, behave
+            // start new crawl
+
+            //todo: fetch robots, first behave
+
             crawls[domain] = {
                 visited: new Map(),
                 crawlDelay: 100,
@@ -64,18 +67,15 @@ app.get('/start-crawl', async (req: CrawlStartRequest, res: Response) => {
         }
     } catch (e) {
         console.log(e)
-        res.send('400')
-        return
+        return res.sendStatus(400)
     }
-    res.send('ok')
+    res.send(`ok, crawling ${domain}`)
 })
 
 app.post(
     '/crawl-result',
     (req: Request<unknown, unknown, CrawlResult>, res: Response) => {
         const crawlResult = req.body
-        // call cloudfunction
-
         try {
             const { depth, assets, url: crawledUrl, domain } = crawlResult
             const crawl = crawls[domain]
@@ -119,7 +119,7 @@ app.post(
             }
         }
 
-        res.send(200)
+        res.sendStatus(200)
     }
 )
 export default app
