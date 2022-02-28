@@ -7,7 +7,6 @@ import { currentJobCount, hasCapacity, incrementJobCount } from './jobCounter'
 export const crawls: Record<string, Crawl> = {}
 
 export const crawlPage = async (job: CrawlJob): Promise<void> => {
-    console.log(`job is ${job}`)
     const url = buildCrawlerUrl(job)
 
     try {

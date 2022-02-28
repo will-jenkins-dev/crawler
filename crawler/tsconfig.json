@@ -9,5 +9,5 @@
     "inlineSourceMap": true,
     "typeRoots": ["./../types/index"],
   },
- 
+  "include": ["src", "tests"]
 }

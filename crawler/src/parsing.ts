@@ -2,8 +2,7 @@ import { JSDOM } from 'jsdom'
 import { AssetType, PageAssets } from '../../types'
 
 const linkIsValid = (l: string) =>
-    l && !l.startsWith('#') && !l.startsWith('about:blank') && l.length > 0
-
+    l.length > 0 && !l.startsWith('#') && !l.startsWith('about:blank')
 const findAssets = (assetType: AssetType, doc: Document): string[] => {
     switch (assetType) {
         case 'links':
@@ -12,7 +11,7 @@ const findAssets = (assetType: AssetType, doc: Document): string[] => {
                 .filter(linkIsValid)
         case 'images':
             return [...doc.querySelectorAll('img')].map((im) => im.src)
-        case 'form':
+        case 'forms':
             return [...doc.querySelectorAll('form')].map(
                 (f) => f.id || 'unknown id'
             )

@@ -65,13 +65,9 @@ app.get('/crawl-status', async (req: CrawlStatustRequest, res: Response) => {
         if (!existingCrawl) {
             const message = `unknown crawl: ${domain}`
             logger.log(message)
-            res.status(400)
+            res.status(404)
             return res.send(message)
         }
-
-        //todo: fetch robots, first behave
-
-        // start new crawl
         const crawl = crawls[domain]
         const results = Object.fromEntries(crawl.visited.entries())
         res.json(results)

@@ -1,4 +1,4 @@
-const assetType = ['links', 'images', 'form', 'video', 'audio'] as const
+const assetType = ['links', 'images', 'forms', 'video', 'audio'] as const
 export type AssetType = typeof assetType[number]
 export type PageAssets = { [K in AssetType]?: string[] }
 
