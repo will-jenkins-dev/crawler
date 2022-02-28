@@ -38,7 +38,7 @@ app.get('/start-crawl', async (req: CrawlStartRequest, res: Response) => {
         // start new crawl
         const newCrawl = {
             visited: new Map(),
-            crawlDelayMsec: 100,
+            crawlDelayMsec: 250,
             lastCrawlTime: 0,
             crawlStartTime: Date.now(),
         }
