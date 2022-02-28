@@ -1,9 +1,11 @@
 import express, { Response, Request } from 'express'
 import axios from 'axios'
+import * as logger from './utils/logger'
+
 import { CrawlJob, CrawlJobRequest, CrawlResult, PageAssets } from '../../types'
+import { collectAssets, isValidUrl } from './parsing/pageParsing'
 
 import config from './config'
-import { collectAssets, isValidUrl } from './parsing/page-parsing'
 
 export const app = express()
 
@@ -35,13 +37,13 @@ app.get('/crawl', async (req: CrawlJobRequest, res: Response) => {
                 crawlResult = { domain, url, depth, info: { status: status } }
             }
         } catch (e) {
-            console.log(e)
+            logger.logError(e)
             crawlResult = { domain, url, depth, info: { status: 500 } }
         }
         try {
             await axios.post(callbackUrl, crawlResult)
         } catch (e) {
-            console.log(e)
+            logger.logError(e)
         }
     }
 })

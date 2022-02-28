@@ -8,12 +8,8 @@
         "watch": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"nodemon -r dotenv/config ./dist/manager/index.js\"",
         "test": "rm -rf dist && npm run lint && tsc && jest --silent",
         "test-watch": "rm -rf dist && tsc-watch --noClear -p ./tsconfig.json --onSuccess \"jest --silent\"",
-        "test-dev": "rm -rf dist && tsc-watch --noClear -p ./tsconfig.json --onSuccess \"jest -- people-id-delete.test.js\"",
         "types": "rm -rf dist && tsc",
-        "lint": "eslint . --ext .ts",
-        "lint-and-fix": "eslint . --ext .ts --fix",
-        "check": "rm -rf dist && tsc && eslint . --ext .ts",
-        "start-production": "rm -rf node_modules && npm install --production && npm install nodemon && rm -rf dist && tsc --project tsconfig.production.json && nodemon -r dotenv/config ./dist/index.js"
+        "lint": "eslint . --ext .ts"
     },
     "keywords": [],
     "author": "Rnwl",
@@ -39,7 +35,7 @@
         "nodemon": "2.0.12",
         "prettier": "2.3.2",
         "supertest": "6.1.6",
-        "ts-jest": "27.0.5",
+        "ts-jest": "27.1.3",
         "ts-node": "10.5.0",
         "tsc-watch": "4.5.0",
         "typescript": "4.4.2"
@@ -49,9 +45,12 @@
         "node": ">=16.14.0"
     },
     "jest": {
-        "rootDir": "dist/manager",
-        "moduleFileExtensions": [
-            "js"
+        "rootDir": "./",
+        "preset": "ts-jest",
+        "testEnvironment": "node",
+        "testRegex": ".*\\.test\\.ts$",
+        "roots": [
+            "src"
         ]
     }
 }

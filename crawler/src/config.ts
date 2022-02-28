@@ -1,7 +1,7 @@
 import * as packageJson from '../package.json'
 
 const config: Record<string, string | number> = {
-    SERVICE_NAME: 'Cloud Function',
+    SERVICE_NAME: 'Page Crawler',
     SERVICE_VERSION: packageJson.version,
     SERVICE_ID: packageJson.name,
     PORT: (process.env.SERVICE_PORT ?? 8082) as number,

@@ -7,11 +7,10 @@
     "strict": true,
     "esModuleInterop": true,
     "inlineSourceMap": true,
-    
     "types":["jest", "node"]
   },
-  "include": ["src"],
-  "exclude": [
-    "src/**/*.test.ts"
-  ]
+  "include": ["src","index.ts"],
+  // "exclude": [
+  //   "src/**/*.test.ts"
+  // ]
 }

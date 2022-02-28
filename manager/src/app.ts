@@ -1,8 +1,7 @@
 import express, { Request, Response } from 'express'
-
-import config from './config'
-import { crawls, enqueueJob, isInQueue } from './queue/jobQueue'
 import * as logger from './utils/logger'
+
+import { enqueueJob, isInQueue } from './jobs/jobQueue'
 import {
     CrawlResult,
     CrawlStartRequest,
@@ -10,7 +9,10 @@ import {
 } from '../../types'
 import { cleanLinks, shouldFollowLink } from './utils/links'
 import { targetAssetsDefault } from './constants'
-import { decrementJobCount } from './queue/jobCounter'
+import { decrementJobCount } from './jobs/jobCounter'
+
+import config from './config'
+import { addCrawl, getCrawl } from './crawls/crawls'
 
 const app = express()
 app.use(express.json())
@@ -25,21 +27,22 @@ app.get('/start-crawl', async (req: CrawlStartRequest, res: Response) => {
     try {
         const { origin, href } = new URL(startPage)
         domain = origin
-        const existingCrawl = crawls[domain]
+        const existingCrawl = getCrawl(domain)
         if (existingCrawl) {
             logger.log(`already crawling ${domain}`)
             return res.send(`already crawling ${domain}`)
         }
 
-        //todo: fetch robots, first behave
+        //todo: fetch robots -  behave
 
         // start new crawl
-        crawls[domain] = {
+        const newCrawl = {
             visited: new Map(),
             crawlDelayMsec: 100,
             lastCrawlTime: 0,
             crawlStartTime: Date.now(),
         }
+        addCrawl(newCrawl, domain)
         enqueueJob({
             domain,
             pageUrl: href,
@@ -59,17 +62,15 @@ app.get('/crawl-status', async (req: CrawlStatustRequest, res: Response) => {
     const crawlUrl = req.query.url
     let domain
     try {
-        const { origin } = new URL(crawlUrl)
-        domain = origin
-        const existingCrawl = crawls[domain]
+        const { origin: domain } = new URL(crawlUrl)
+        const existingCrawl = getCrawl(domain)
         if (!existingCrawl) {
             const message = `unknown crawl: ${domain}`
             logger.log(message)
             res.status(404)
             return res.send(message)
         }
-        const crawl = crawls[domain]
-        const results = Object.fromEntries(crawl.visited.entries())
+        const results = Object.fromEntries(existingCrawl.visited.entries())
         res.json(results)
     } catch (e) {
         logger.logError(e)
@@ -83,7 +84,7 @@ app.post(
         const crawlResult = req.body
         try {
             const { depth, assets = {}, url: crawledUrl, domain } = crawlResult
-            const currentCrawl = crawls[domain]
+            const currentCrawl = getCrawl(domain)
             if (!currentCrawl) {
                 throw Error(`No crawl found for domain ${domain}`)
             }
@@ -108,7 +109,9 @@ app.post(
                     }
                 })
             } else {
-                console.log('depth limit reached, not adding more jobs')
+                logger.log(
+                    'no links on page or depth limit reached, not adding more jobs'
+                )
             }
         } catch (e) {
             logger.logError(e)

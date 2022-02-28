@@ -6,11 +6,10 @@
     "scripts": {
         "start": "rm -rf dist && tsc && nodemon -r dotenv/config ./dist/crawler/index.js",
         "watch": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"nodemon -r dotenv/config ./dist/crawler/index.js\"",
-        "test": "rm -rf dist && npm run lint && tsc && jest --silent",
+        "test": "rm -rf dist",
+        "test-watch": "rm -rf dist && tsc-watch --noClear -p ./tsconfig.json --onSuccess \"jest --silent\"",
         "types": "rm -rf dist && tsc",
-        "lint": "eslint . --ext .ts",
-        "lint-and-fix": "eslint . --ext .ts --fix",
-        "start-production": "rm -rf node_modules && npm install --production && npm install nodemon && rm -rf dist && tsc --project tsconfig.production.json && nodemon -r dotenv/config ./dist/index.js"
+        "lint": "eslint . --ext .ts"
     },
     "keywords": [],
     "author": "Will Jenkins",
@@ -38,7 +37,7 @@
         "nodemon": "2.0.12",
         "prettier": "2.3.2",
         "supertest": "6.1.6",
-        "ts-jest": "^27.1.3",
+        "ts-jest": "27.1.3",
         "ts-node": "10.5.0",
         "tsc-watch": "4.5.0",
         "typescript": "4.5.5"
@@ -51,6 +50,9 @@
         "rootDir": "./",
         "preset": "ts-jest",
         "testEnvironment": "node",
-        "test-regex": ".*\\.test\\.ts$"
+        "testRegex": ".*\\.test\\.ts$",
+        "roots": [
+            "src"
+        ]
     }
 }
