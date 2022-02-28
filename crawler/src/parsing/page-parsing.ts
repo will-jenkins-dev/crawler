@@ -1,9 +1,10 @@
 import { JSDOM } from 'jsdom'
-import { AssetType, PageAssets } from '../../types'
+import { AssetType, PageAssets } from '../../../types'
 
 const linkIsValid = (l: string) =>
     l.length > 0 && !l.startsWith('#') && !l.startsWith('about:blank')
-const findAssets = (assetType: AssetType, doc: Document): string[] => {
+
+export const findAssets = (assetType: AssetType, doc: Document): string[] => {
     switch (assetType) {
         case 'links':
             return [...doc.querySelectorAll('a')]

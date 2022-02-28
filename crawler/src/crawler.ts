@@ -3,7 +3,7 @@ import axios from 'axios'
 import { CrawlJob, CrawlJobRequest, CrawlResult, PageAssets } from '../../types'
 
 import config from './config'
-import { collectAssets, isValidUrl } from './parsing'
+import { collectAssets, isValidUrl } from './parsing/page-parsing'
 
 export const app = express()
 
