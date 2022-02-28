@@ -6,7 +6,7 @@
     "scripts": {
         "start": "rm -rf dist && tsc && nodemon -r dotenv/config ./dist/crawler/index.js",
         "watch": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"nodemon -r dotenv/config ./dist/crawler/index.js\"",
-        "test": "rm -rf dist",
+        "test": "rm -rf dist && npm run lint && tsc && jest --silent",
         "test-watch": "rm -rf dist && tsc-watch --noClear -p ./tsconfig.json --onSuccess \"jest --silent\"",
         "types": "rm -rf dist && tsc",
         "lint": "eslint . --ext .ts"
