@@ -6,11 +6,10 @@
         "setup": "npm i && npm i --prefix crawler && npm i --prefix manager",
         "start": "npm run start --prefix crawler & npm run start --prefix manager",
         "start-watch": "npm run watch --prefix crawler & npm run watch --prefix manager",
-        "test": "npm run test --prefix crawler & npm run test --prefix manager",
+        "test": "npm run test --prefix crawler && npm run test --prefix manager",
         "lint": "npm run lint --prefix crawler & npm run lint --prefix manager"
     },
     "pre-commit": [
-        "lint",
         "test"
     ],
     "author": "Will Jenkins",
